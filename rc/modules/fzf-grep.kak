@@ -20,6 +20,11 @@ str fzf_grep_command 'grep'
 declare-option -docstring "Whether to enable preview in grep window." \
 bool fzf_grep_preview true
 
+declare-option -docstring "Whether to include filename in the fzf search.
+
+Default value: false" \
+bool fzf_grep_include_filename false
+
 declare-option -docstring "Preview command for seeing file contents of the selected item.
 
 Default value:
@@ -60,6 +65,11 @@ ${kak_opt_fzf_vertical_map:-ctrl-v}: open search result in vertical split"
                     highlight_cmd="$kak_opt_fzf_grep_preview_command" ;;
     esac
 
+    fzf_arg_n="3.."
+    if [ "${kak_opt_fzf_grep_include_filename:-}" = "true" ]; then
+        fzf_arg_n="1,3.."
+    fi
+
     preview_cmd=""
     if [ "${kak_opt_fzf_grep_preview:-}" = "true" ]; then
         preview_cmd="-preview -preview-cmd %{--preview '(${highlight_cmd} || cat {1}) 2>/dev/null' --preview-window=\${pos}:+{2}-/2}"
@@ -67,7 +77,7 @@ ${kak_opt_fzf_vertical_map:-ctrl-v}: open search result in vertical split"
 
     printf "%s\n" "info -title '${title}' '${message}${tmux_keybindings}'"
     [ -n "${kak_client_env_TMUX}" ] && additional_flags="--expect ${kak_opt_fzf_vertical_map:-ctrl-v} --expect ${kak_opt_fzf_horizontal_map:-ctrl-s}"
-    printf "%s\n" "fzf -kak-cmd %{evaluate-commands} ${preview_cmd} -fzf-args %{--expect ${kak_opt_fzf_window_map:-ctrl-w} $additional_flags  --delimiter=':' -n'3..'} -items-cmd %{$cmd} -filter %{sed -E 's/([^:]+):([^:]+):.*/edit -existing \1; execute-keys \2gvc/'}"
+    printf "%s\n" "fzf -kak-cmd %{evaluate-commands} ${preview_cmd} -fzf-args %{--expect ${kak_opt_fzf_window_map:-ctrl-w} $additional_flags  --delimiter=':' -n${fzf_arg_n}} -items-cmd %{$cmd} -filter %{sed -E 's/([^:]+):([^:]+):.*/edit -existing \1; execute-keys \2gvc/'}"
 }}
 
 §
